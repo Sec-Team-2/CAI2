@@ -15,7 +15,7 @@ def enviar_kilometros(kilometros):
         # Crear socket TCP/IP
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
             client.connect((SERVER_HOST, SERVER_PORT))  # Conectar al servidor
-            client.sendall(json.dumps(mensaje).encode('utf-8'))  # Enviar datos
+            client.sendall(json.dumps(mensaje).encode('utf-8'))
 
     except Exception as e:
         print(f"Error al conectar con el servidor: {e}")
@@ -24,3 +24,4 @@ def enviar_kilometros(kilometros):
 if __name__ == "__main__":
     kilometros = int(input("Introduzca los kilómetros recorridos: "))
     enviar_kilometros(kilometros)
+    

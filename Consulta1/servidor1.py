@@ -1,29 +1,23 @@
-import socket
-import threading
-import struct
+import asyncio
 import json
 
-# Configuración del servidor
-HOST = '0.0.0.0'  # Escucha en todas las interfaces de red
-PORT = 65432       # Puerto de conexión
-
 # Base de datos simulada para almacenar los kilómetros por vehículo
-
-lock = threading.Lock()  # Para evitar condiciones de carrera
 datos_kilometros = 0
+lock = asyncio.Lock()  # Usar Lock asincrónico para evitar condiciones de carrera
 
-def manejar_cliente(conn, addr):
+async def manejar_cliente(reader, writer):
     """ Maneja la conexión de un cliente. """
     global datos_kilometros
+    addr = writer.get_extra_info('peername')
     print(f"Conexión establecida con {addr}")
     
     try:
-        # Recibir datos en paquetes bien definidos
-        data = conn.recv(1024)
+        # Recibir datos
+        data = await reader.read(1024)
         if not data:
             return
         
-        # Decodificar datos JSON para evitar problemas de desbordamiento
+        # Decodificar los datos JSON
         try:
             mensaje = json.loads(data.decode('utf-8'))
             kilometros = mensaje.get("kilometros")
@@ -36,7 +30,7 @@ def manejar_cliente(conn, addr):
             print(f"Datos recibidos: {kilometros}")
     
             # Evitar condiciones de carrera con lock
-            with lock:
+            async with lock:
                 print(datos_kilometros)
                 datos_kilometros += kilometros
                 print(f"Kilómetros totales: {datos_kilometros}")
@@ -45,15 +39,18 @@ def manejar_cliente(conn, addr):
         print(f"Error al manejar cliente {addr}: {e}")
     
     finally:
-        conn.close()
+        writer.close()
+        await writer.wait_closed()
 
-# Configurar y arrancar el servidor
-with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as server:
-    server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    server.bind((HOST, PORT))
-    server.listen()
-    print(f"Servidor escuchando en {HOST}:{PORT}")
-    
-    while True:
-        conn, addr = server.accept()
-        threading.Thread(target=manejar_cliente, args=(conn, addr)).start()
+async def main():
+    server = await asyncio.start_server(
+        manejar_cliente, '0.0.0.0', 65432
+    )
+    addr = server.sockets[0].getsockname()
+    print(f"Servidor escuchando en {addr}")
+
+    async with server:
+        await server.serve_forever()
+
+# Ejecutar el servidor
+asyncio.run(main())

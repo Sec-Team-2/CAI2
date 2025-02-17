@@ -6,10 +6,11 @@ import random
 # Configuración del servidor al que nos vamos a conectar
 SERVER_HOST = "127.0.0.1"
 SERVER_PORT = 65432
-NUM_CONNECTIONS = 100  # Número de conexiones simultáneas
+NUM_CONNECTIONS = 15000  # Número de conexiones simultáneas
 
 def client_task(i):
-    kilometros = random.randint(0, 16000)
+    # kilometros = random.randint(0, 16000)
+    kilometros = 1
     """ Envía los kilómetros recorridos por un vehículo al servidor """
     mensaje = {
         "kilometros": kilometros
