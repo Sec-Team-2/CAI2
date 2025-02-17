@@ -2,7 +2,7 @@ import socket
 import json
 
 # Configuración del cliente
-SERVER_HOST = '127.0.0.1'  # Cambia esto a la IP del servidor si es remoto
+SERVER_HOST = '127.0.0.1'  
 SERVER_PORT = 65432
 
 def enviar_kilometros(kilometros):
@@ -15,12 +15,12 @@ def enviar_kilometros(kilometros):
         # Crear socket TCP/IP
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as client:
             client.connect((SERVER_HOST, SERVER_PORT))  # Conectar al servidor
-            client.sendall(json.dumps(mensaje).encode('utf-8'))
+            client.sendall(json.dumps(mensaje).encode('utf-8')) #Enviar datos
 
     except Exception as e:
         print(f"Error al conectar con el servidor: {e}")
 
-# Ejemplo de uso
+# Codigo para pedir un input que envie al server
 if __name__ == "__main__":
     kilometros = int(input("Introduzca los kilómetros recorridos: "))
     enviar_kilometros(kilometros)

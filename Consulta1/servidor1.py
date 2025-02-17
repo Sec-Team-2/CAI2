@@ -9,11 +9,11 @@ async def manejar_cliente(reader, writer):
     """ Maneja la conexión de un cliente. """
     global datos_kilometros
     addr = writer.get_extra_info('peername')
-    print(f"Conexión establecida con {addr}")
+    # print(f"Conexión establecida con {addr}") para comprobar datos
     
     try:
         # Recibir datos
-        data = await reader.read(1024)
+        data = await reader.read(1024) #1024 ==tamanyo buffer
         if not data:
             return
         
@@ -31,7 +31,7 @@ async def manejar_cliente(reader, writer):
     
             # Evitar condiciones de carrera con lock
             async with lock:
-                print(datos_kilometros)
+                # print(datos_kilometros) para comprobar funcionamiento
                 datos_kilometros += kilometros
                 print(f"Kilómetros totales: {datos_kilometros}")
     
@@ -42,6 +42,7 @@ async def manejar_cliente(reader, writer):
         writer.close()
         await writer.wait_closed()
 
+#Encender servidor
 async def main():
     server = await asyncio.start_server(
         manejar_cliente, '0.0.0.0', 65432

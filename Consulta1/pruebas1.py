@@ -9,8 +9,9 @@ SERVER_PORT = 65432
 NUM_CONNECTIONS = 15000  # Número de conexiones simultáneas
 
 def client_task(i):
-    # kilometros = random.randint(0, 16000)
-    kilometros = 1
+    kilometros = random.randint(0, 16000) # usar para ver que soporta las peticiones en una condicion real
+    # kilometros = 1 # usarlo para ver el mejor caso (paquetes de tamanyo min)
+    # kilometros = 16000 # para comprobar el peor caso (todos mandan el paquete de tamanyo max)
     """ Envía los kilómetros recorridos por un vehículo al servidor """
     mensaje = {
         "kilometros": kilometros
