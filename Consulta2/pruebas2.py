@@ -47,5 +47,6 @@ if __name__ == "__main__":
 
     #Ver que soporta trafico real abriendo y cerrando muchas rutas
     for zone in zones:
-        asyncio.run(test_close_zones(zone))
         asyncio.run(test_open_zones(zone))
+        asyncio.run(test_close_zones(zone))
+        
