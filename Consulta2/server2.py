@@ -44,27 +44,31 @@ def create_traffic_message(active, carretera, tramo, motivo, estado):
         "estado": estado,
     })
 
-async def send_notification(message):
+async def send_notification(message, zone):
     """
     Intenta enviar 'message' a cada cliente.
     Si la conexión falla, almacena el mensaje en el buffer para reenvío posterior.
     """
-    async with client_lock:
-        for client_id, client in list(client_data.items()):
-            ws = client.get("websocket")
-            if ws is not None:
-                try:
-                    # Envía primero los mensajes pendientes.
-                    while client["buffer"]:
-                        buffered_message = client["buffer"].pop(0)
-                        await ws.send(buffered_message)
+    print("antes de lock")
+    print("despues de lock")
+    for client_id, client in client_data.items():
+        ws = client.get("websocket")
+        #print(f"Lista de clientes: {str(client_data)}")
+        if ws is not None:
+            print(f"Zona a cerrar notificacion: {zone}")
+            try:
+                # Envía primero los mensajes pendientes.
+                while client["buffer"]:
+                    buffered_message = client["buffer"].pop(0)
+                    await ws.send(buffered_message)
+                if zone in client["route"]:
                     await ws.send(message)
-                    client["last_seen"] = time.time()  # Actualiza la última actividad
-                except websockets.exceptions.ConnectionClosed:
-                    client["buffer"].append(message)
-                    client["websocket"] = None
-            else:
+                client["last_seen"] = time.time()  # Actualiza la última actividad
+            except websockets.exceptions.ConnectionClosed:
                 client["buffer"].append(message)
+                client["websocket"] = None
+        else:
+            client["buffer"].append(message)
 
 async def handle_connection(websocket, path=None):
     """
@@ -111,7 +115,8 @@ async def handle_connection(websocket, path=None):
                             notification = create_traffic_message(
                                 True, "A-4", zone, "Cierre de vía", "Tránsito interrumpido"
                             )
-                            await send_notification(notification)
+                            print(f"Zona a cerrar en handle: {zone}")
+                            await send_notification(notification, zone)
                             await websocket.send(f"Zona '{zone}' cerrada.")
                         else:
                             await websocket.send(f"Error: La zona '{zone}' no existe en rutas abiertas.")
@@ -153,7 +158,7 @@ async def handle_connection(websocket, path=None):
             if client_id in client_data:
                 client_data[client_id]["websocket"] = None
                 client_data[client_id]["last_seen"] = time.time()
-
+'''
 async def broadcast_messages():
     """
     Tarea en segundo plano que cada 10 segundos genera un mensaje de tráfico
@@ -165,7 +170,7 @@ async def broadcast_messages():
             True, "A-4", "Km 127 al 135", "Obras en la vía", "Tránsito interrumpido"
         )
         await send_notification(message)
-
+'''
 async def cleanup_ghost_connections():
     """
     Tarea en segundo plano que limpia las entradas de clientes desconectados cuya
@@ -190,7 +195,7 @@ async def main():
         handle_connection, "localhost", 8765, ping_interval=20, ping_timeout=20
     )
     print("Servidor WebSocket en ejecución en ws://localhost:8765")
-    asyncio.create_task(broadcast_messages())
+    #asyncio.create_task(broadcast_messages())
     asyncio.create_task(cleanup_ghost_connections())
     await asyncio.Future()  # Mantiene el servidor en ejecución indefinidamente
 
